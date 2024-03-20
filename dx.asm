@@ -1,11 +1,11 @@
-INCLUDE "hardware.inc"
+INCLUDE "inc/hardware.inc"
 INCLUDE "config.inc"
-INCLUDE "const.inc"
-INCLUDE "gfx.inc"
-INCLUDE "coords.inc"
-INCLUDE "asserts.inc"
-INCLUDE "gfx_constants.inc"
-INCLUDE "scgb_constants.inc"
+INCLUDE "inc/const.inc"
+INCLUDE "inc/gfx.inc"
+INCLUDE "inc/coords.inc"
+INCLUDE "inc/asserts.inc"
+INCLUDE "inc/gfx_constants.inc"
+INCLUDE "inc/scgb_constants.inc"
 
 DEF IS_DMG      EQU $00 ; single-speed
 DEF IS_SGB      EQU $01 ; single-speed, colorized
@@ -582,8 +582,8 @@ Waveform::
     ;db $49, $45, $47, $E1, $49, $45, $47, $E1, $10, $33, $A2, $8F, $DD, $E7, $60, $5E ; from BGB
     db $AC, $DD, $DA, $48, $36, $02, $CF, $16, $2C, $04, $E5, $2C, $AC, $DD, $DA, $48 ; from R-Type DX
 
-INCLUDE "color.asm"
-INCLUDE "sgb.asm"
+INCLUDE "dx/color.asm"
+INCLUDE "dx/sgb/sgb.asm"
 
 IF GDMA_VER > 0
 INCLUDE "gdma.asm"

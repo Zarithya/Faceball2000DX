@@ -3,7 +3,7 @@ DEF LCDC_DEFAULT         EQU (1 << LCDCB_ON) | (1 << LCDCB_BGON)
 INCLUDE "gfx/sgb_layouts.asm"
 INCLUDE "gfx/sgb/blk_packets.asm"
 INCLUDE "gfx/sgb/pal_packets.asm"
-INCLUDE "sgb_ctrl_packets.asm"
+INCLUDE "dx/sgb/sgb_ctrl_packets.asm"
 
 PredefPals:
 	table_width PALETTE_SIZE, PredefPals
