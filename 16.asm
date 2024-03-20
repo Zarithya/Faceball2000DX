@@ -1,4 +1,5 @@
 INCLUDE "inc/hardware.inc"
+INCLUDE "inc/ram.inc"
 INCLUDE "config.inc"
 
 SECTION "Receive Serial Data",ROM0[$0EC7]

@@ -1,5 +1,6 @@
 INCLUDE "inc/hardware.inc"
 INCLUDE "config.inc"
+INCLUDE "inc/ram.inc"
 INCLUDE "inc/const.inc"
 INCLUDE "inc/gfx.inc"
 INCLUDE "inc/coords.inc"
