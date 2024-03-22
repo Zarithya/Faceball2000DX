@@ -47,13 +47,15 @@ It is experimental and not recommended for most players.
 
 ##### GDMA VERSION COMPATIBILITY:
 Emulator:
-BGB - Pretty much flawless
-VBA - Pretty much flawless
-Sameboy - Playable, but suffers graphical artifacts on screen
-mGBA - Playable, but suffers graphical artifacts on screen
+- BGB - Pretty much flawless
+- VBA - Pretty much flawless
+- Sameboy - Playable, but suffers graphical artifacts on screen
+- mGBA - Playable, but suffers graphical artifacts on screen
+
 Hardware:
-DMG, MGB, SGB - incompatible
-CGB-001 - Playable, but suffers severe graphical glitchiness
-AGB-001 - Playable, but suffers severe graphical glitchiness
-AGS-101 - Pretty much flawless, other than the top tile row flickering
-Untested: AGS-001 and DOL-017
+- DMG, MGB, SGB - incompatible
+- CGB-001 - Playable, but suffers severe graphical glitchiness
+- AGB-001 - Playable, but suffers severe graphical glitchiness
+- AGS-001 - Untested
+- AGS-101 - Pretty much flawless, other than the top tile row flickering
+- DOL-017 - Untested
