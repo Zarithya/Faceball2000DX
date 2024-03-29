@@ -98,7 +98,7 @@ SECTION "Copyright Screen Title",ROMX[$421F],BANK[7]
     db "  FACEBALL 2000 DX  ", 0
 
 SECTION "Copyright Screen License",ROMX[$436F],BANK[7]
-    db "; 2024 FB DX16 Team ", 0
+    db "; 2024 HANDface Team", 0
 
 SECTION "Title Screen Logo",ROMX[$6634],BANK[2]
 	INCBIN "gfx/logo.2bpp"
@@ -504,8 +504,8 @@ SECTION "Credits",ROMX[$5B2F],BANK[4]
     db 5
     dw CreditsScreenGB16TeamLine1, CreditsScreenGB16TeamLine2, CreditsScreenGB16TeamLine3, CreditsScreenGB16TeamLine4, CreditsScreenGB16TeamLine5
 
-    db 4
-    dw CreditsScreenSpecialThanksLine1, CreditsScreenSpecialThanksLine2, CreditsScreenSpecialThanksLine3, CreditsScreenSpecialThanksLine4
+    db 5
+    dw CreditsScreenSpecialThanksLine1, CreditsScreenSpecialThanksLine2, CreditsScreenSpecialThanksLine3, CreditsScreenSpecialThanksLine4, CreditsScreenSpecialThanksLine5
 
     db 6
     dw $5E76, $5E8A, $5E9E, $5EB2, $5EC6, $5EDA
@@ -521,7 +521,7 @@ CreditsScreen1Line2:
     db 3,   " ---------------- ", 0
     
 CreditsScreenDXLine1::
-    db 2,   "      DX HACK     ", 0
+    db 2,   "    DX UPGRADE    ", 0
 
 CreditsScreenDXLine2::
     db 5,   "     Zarithya     ", 0
@@ -533,7 +533,7 @@ CreditsScreenDXLine4::
     db 9,   "     AntonioND    ", 0
 
 CreditsScreenGB16TeamLine1::
-    db 2,   "FACEBALL GB16 TEAM", 0
+    db 2,   "   HANDFACE TEAM  ", 0
 
 CreditsScreenGB16TeamLine2::
     db 5,   "     Zarithya     ", 0
@@ -554,10 +554,13 @@ CreditsScreenSpecialThanksLine2::
     db 5,   "  Don Komarechka  ", 0
     
 CreditsScreenSpecialThanksLine3::
-    db 7,   "   Kelsey Lewin   ", 0
-
+    db 7,   "    planetclue    ", 0
+    
 CreditsScreenSpecialThanksLine4::
-    db 9,   "     Chris D.     ", 0
+    db 9,   "   Kelsey Lewin   ", 0
+    
+CreditsScreenSpecialThanksLine5::
+    db 11,  "     Chris D.     ", 0
 
 SECTION "New Data Bank",ROMX[$4000],BANK[8]
 LoadWaveform::
