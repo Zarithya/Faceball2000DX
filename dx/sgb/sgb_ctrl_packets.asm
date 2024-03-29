@@ -47,7 +47,8 @@ ENDM
 PalTrnPacket:  sgb_pal_trn
 MltReq1Packet: sgb_mlt_req 1
 MltReq2Packet: sgb_mlt_req 2
-ChrTrnPacket:  sgb_chr_trn 0, 0
+ChrTrn1Packet: sgb_chr_trn 0, 0
+ChrTrn2Packet: sgb_chr_trn 1, 0
 PctTrnPacket:  sgb_pct_trn
 
 MaskEnFreezePacket: sgb_mask_en 1

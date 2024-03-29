@@ -17,7 +17,7 @@ INCBIN "gfx/sgb/sgb_border.sgb.tilemap"
 INCLUDE "gfx/sgb/sgb_border.pal"
 
 SGBBorderGFX:
-INCBIN "gfx/sgb/sgb_border.2bpp"
+INCBIN "gfx/sgb/sgb_border.4bpp"
 
 CheckSGB:
 	ld hl, MltReq2Packet
@@ -205,16 +205,10 @@ CheckAndInitSGB:
 	reti
 
 PushSGBBorder:
-	call .LoadSGBBorderPointers
-	push de
-	call SGBBorder_PushTiles
-	pop hl
-	call SGBBorder_PushMapAndPal
-	ret
-
-.LoadSGBBorderPointers:
 	ld hl, SGBBorderGFX
-	ld de, SGBBorderMapAndPalettes
+	call SGBBorder_PushTiles
+	ld hl, SGBBorderMapAndPalettes
+	call SGBBorder_PushMapAndPal
 	ret
 
 SGBBorder_PushMapAndPal:
@@ -256,21 +250,26 @@ SGBBorder_PushTiles:
 	call DisableLCD
 	ld a, %11100100
 	ldh [rBGP], a
+	push hl
 	ld de, _VRAM8800
-	ld b, $80
-.loop
-	push bc
-	ld bc, 1 tiles
+	ld bc, $80 tiles * 2
 	call CopyData
-	ld bc, 1 tiles
-	call ClearBytes
-	pop bc
-	dec b
-	jr nz, .loop
 	call DrawDefaultTiles
 	ld a, LCDC_DEFAULT
 	ldh [rLCDC], a
-	ld hl, ChrTrnPacket
+	ld hl, ChrTrn1Packet
+	call PushSGBPacket
+	call SGBDelayCycles
+	call DisableLCD
+	pop hl
+	ld de, _VRAM8800
+	ld bc, $80 tiles * 2
+	add hl, bc
+	call CopyData
+	call DrawDefaultTiles
+	ld a, LCDC_DEFAULT
+	ldh [rLCDC], a
+	ld hl, ChrTrn2Packet
 	call PushSGBPacket
 	call SGBDelayCycles
 	xor a
