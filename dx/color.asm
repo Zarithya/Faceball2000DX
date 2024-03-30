@@ -44,7 +44,7 @@ _LoadPalettes:
     ld a, [hCurrentLayout]
     ld b, a
     call GetSGBLayout
-    call PushSGBPacket
+    call SGB_PushPacket
     ret
 
 BGPalList::
@@ -86,10 +86,10 @@ _LoadTileAttrs:
 .skip
     call GetSGBLayout
     push de
-    call PushSGBPacket
-	call SGBDelayCycles
+    call SGB_PushPacket
+	call SGB_Delay
     pop hl
-    jp PushSGBPacket
+    jp SGB_PushPacket
 
 _LoadCGBLayout_ReturnFromJumptable:
     ld c, $14
@@ -165,6 +165,45 @@ CGBLayoutJumpTable::
     ld de, TileAttrGameplay
     ld b, $12
     ret
+
+DisableLCD::
+; Turn the LCD off
+
+; Don't need to do anything if the LCD is already off
+	ldh a, [rLCDC]
+	bit LCDCB_ON, a
+	ret z
+
+	xor a
+	ldh [rIF], a
+	ldh a, [rIE]
+	ld b, a
+
+; Disable VBlank
+	res IEB_VBLANK, a
+	ldh [rIE], a
+
+.wait
+; Wait until VBlank would normally happen
+	ldh a, [rLY]
+	cp SCRN_Y + 1
+	jr nz, .wait
+
+	ldh a, [rLCDC]
+	and ~(1 << LCDCB_ON)
+	ldh [rLCDC], a
+
+	xor a
+	ldh [rIF], a
+	ld a, b
+	ldh [rIE], a
+	ret
+
+EnableLCD::
+	ldh a, [rLCDC]
+	set LCDCB_ON, a
+	ldh [rLCDC], a
+	ret
 
 BGPal0::
     RGB 31,31,31, 15,15,15, 07,07,07, 00,00,00 ; Grayscale

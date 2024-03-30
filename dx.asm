@@ -192,7 +192,7 @@ BPSLogoInitHook::
     ld a, [hCGB]
     cp IS_DMG ; SGB identifies as DMG on boot
     jr nz, .notsgb
-    call CheckAndInitSGB
+    call SGB_Init
 .notsgb
     push de
     ld b, SCGB_BPS_LOGO
@@ -302,8 +302,8 @@ LoadTileAttrs::
     ld [rROMB0 + $100], a
     reti
 
-; Clear both VRAM banks on CGB
 UpdateVRAMGFXHook:
+; Clear VRAM attribute bank when updating GFX
     ld a, 1
     ld [rVBK], a
     call ClearVRAM
@@ -452,8 +452,8 @@ TitleAndDemoTimerFix:
     ld a, c
     ret
 
-; Clear both VRAM banks on CGB
 SECTION "Clear VRAM Hook",ROMX[$4021],BANK[4]
+; Clear both VRAM banks on CGB
     call ClearVRAM
     ld a, 1
     ld [rVBK], a

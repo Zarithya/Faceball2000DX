@@ -1,29 +1,31 @@
-DEF LCDC_DEFAULT         EQU (1 << LCDCB_ON) | (1 << LCDCB_BGON)
+DEF LCDC_DEFAULT_SGB 	EQU (1 << LCDCB_ON) | (1 << LCDCB_BGON)
 
-INCLUDE "gfx/sgb_layouts.asm"
-INCLUDE "gfx/sgb/blk_packets.asm"
-INCLUDE "gfx/sgb/pal_packets.asm"
-INCLUDE "dx/sgb/sgb_ctrl_packets.asm"
+INCLUDE "dx/sgb/layouts.asm"
+INCLUDE "dx/sgb/blk_packets.asm"
+INCLUDE "dx/sgb/pal_packets.asm"
+INCLUDE "dx/sgb/ctrl_packets.asm"
 
 PredefPals:
 	table_width PALETTE_SIZE, PredefPals
 INCLUDE "gfx/sgb/predef.pal"
 	assert_table_length NUM_PREDEF_PALS
 
+SGBBorderGFX:
+; 4 bits per pixel image, in SNES format
+INCBIN "gfx/sgb/sgb_border.4bpp"
+
 SGBBorderMapAndPalettes:
 ; interleaved tile ids and palette ids, without the center 20x18 screen area
 INCBIN "gfx/sgb/sgb_border.sgb.tilemap"
-; four SGB palettes of 16 colors each; only the first 4 colors are used
+; four SGB palettes of 16 colors each; only the first palette is used
 INCLUDE "gfx/sgb/sgb_border.pal"
 
-SGBBorderGFX:
-INCBIN "gfx/sgb/sgb_border.4bpp"
-
-CheckSGB:
+SGB_CheckIsSGB:
+; Request SGB 2 player compatibility, carry set if on SGB
 	ld hl, MltReq2Packet
-	call _PushSGBPacket
-	call SGBDelayCycles
-	call SGBDelayCycles
+	call _SGB_PushPacket
+	call SGB_Delay
+	call SGB_Delay
 	ldh a, [rP1]
 	and $3
 	cp $3
@@ -32,26 +34,26 @@ CheckSGB:
 	ldh [rP1], a
 	ldh a, [rP1]
 	ldh a, [rP1]
-	call SGBDelayCycles
-	call SGBDelayCycles
+	call SGB_Delay
+	call SGB_Delay
 	ld a, $30
 	ldh [rP1], a
-	call SGBDelayCycles
-	call SGBDelayCycles
+	call SGB_Delay
+	call SGB_Delay
 	ld a, $10
 	ldh [rP1], a
 rept 6
 	ldh a, [rP1]
 endr
-	call SGBDelayCycles
-	call SGBDelayCycles
+	call SGB_Delay
+	call SGB_Delay
 	ld a, $30
 	ldh [rP1], a
 	ldh a, [rP1]
 	ldh a, [rP1]
 	ldh a, [rP1]
-	call SGBDelayCycles
-	call SGBDelayCycles
+	call SGB_Delay
+	call SGB_Delay
 	ldh a, [rP1]
 	and $3
 	cp $3
@@ -66,12 +68,14 @@ endr
 	ret
 
 .FinalPush:
+; reset SGB to single player
 	ld hl, MltReq1Packet
-	call _PushSGBPacket
-	call SGBDelayCycles
-	jp SGBDelayCycles
+	call _SGB_PushPacket
+	call SGB_Delay
+	jp SGB_Delay
 
-SGBBorder_PushBGPals:
+SGB_PushPredefPals:
+; Push predefined SGB palettes using VRAM transfer
 	call DisableLCD
 	ld a, %11100100
 	ldh [rBGP], a
@@ -79,56 +83,17 @@ SGBBorder_PushBGPals:
 	ld de, _VRAM8800
 	ld bc, $100 tiles
 	call CopyData
-	call DrawDefaultTiles
-	ld a, LCDC_DEFAULT
+	call SGB_DrawTilemapForVRAMTransfer
+	ld a, LCDC_DEFAULT_SGB
 	ldh [rLCDC], a
 	ld hl, PalTrnPacket
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
 	xor a
 	ldh [rBGP], a
 	ret
 
-DisableLCD::
-; Turn the LCD off
-
-; Don't need to do anything if the LCD is already off
-	ldh a, [rLCDC]
-	bit LCDCB_ON, a
-	ret z
-
-	xor a
-	ldh [rIF], a
-	ldh a, [rIE]
-	ld b, a
-
-; Disable VBlank
-	res IEB_VBLANK, a
-	ldh [rIE], a
-
-.wait
-; Wait until VBlank would normally happen
-	ldh a, [rLY]
-	cp SCRN_Y + 1
-	jr nz, .wait
-
-	ldh a, [rLCDC]
-	and ~(1 << LCDCB_ON)
-	ldh [rLCDC], a
-
-	xor a
-	ldh [rIF], a
-	ld a, b
-	ldh [rIE], a
-	ret
-
-EnableLCD::
-	ldh a, [rLCDC]
-	set LCDCB_ON, a
-	ldh [rLCDC], a
-	ret
-
-DrawDefaultTiles:
+SGB_DrawTilemapForVRAMTransfer:
 ; Draw 240 tiles (2/3 of the screen) from tiles in VRAM
 	hlbgcoord 0, 0 ; BG Map 0
 	ld de, BG_MAP_WIDTH - SCREEN_WIDTH
@@ -171,46 +136,32 @@ ClearBytes:
 	jr nz, .loop
 	ret
 
-ByteFill::
-; fill bc bytes with the value of a, starting at hl
-	inc b ; we bail the moment b hits 0, so include the last run
-	inc c ; same thing; include last byte
-	jr .HandleLoop
-.PutByte:
-	ld [hli], a
-.HandleLoop:
-	dec c
-	jr nz, .PutByte
-	dec b
-	jr nz, .PutByte
-	ret
-
-CheckAndInitSGB:
+SGB_Init:
 	di
 	ld a, $1
 	ld [hDisableInputs], a
 	xor a
 	ldh [rP1], a
-	call CheckSGB
+	call SGB_CheckIsSGB
 	jr nc, .skip
 	ld a, IS_SGB
 	ldh [hCGB], a
-	call PushSNESCodeToSGB
-	call SGBBorder_PushBGPals
-	call SGBDelayCycles
+	call SGB_PushDefaultSNESCode
+	call SGB_PushPredefPals
+	call SGB_Delay
 	call SGB_ClearVRAM
-	call PushSGBBorder
-	call SGBDelayCycles
+	call SGB_PushBorder
+	call SGB_Delay
 	call SGB_ClearVRAM
 	ld hl, MaskEnCancelPacket
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
 .skip
 	xor a
 	ld [hDisableInputs], a
 	reti
 
-PushSGBBorder:
+SGB_PushBorder:
 	ld hl, SGBBorderGFX
 	call SGBBorder_PushTiles
 	ld hl, SGBBorderMapAndPalettes
@@ -218,8 +169,9 @@ PushSGBBorder:
 	ret
 
 SGBBorder_PushMapAndPal:
+; Push SGB border tilemap and palettes using VRAM transfer
 	call DisableLCD
-	ld a, $e4
+	ld a, %11100100
 	ldh [rBGP], a
 	ld de, _VRAM8800
 	ld bc, (6 + SCREEN_WIDTH + 6) * 5 * 2
@@ -242,17 +194,18 @@ SGBBorder_PushMapAndPal:
 	call ClearBytes
 	ld bc, 16 palettes
 	call CopyData
-	call DrawDefaultTiles
-	ld a, LCDC_DEFAULT
+	call SGB_DrawTilemapForVRAMTransfer
+	ld a, LCDC_DEFAULT_SGB
 	ldh [rLCDC], a
 	ld hl, PctTrnPacket
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
 	xor a
 	ldh [rBGP], a
 	ret
 
 SGBBorder_PushTiles:
+; Push SGB border tiles using two VRAM transfers
 	call DisableLCD
 	ld a, %11100100
 	ldh [rBGP], a
@@ -260,37 +213,39 @@ SGBBorder_PushTiles:
 	ld de, _VRAM8800
 	ld bc, $80 tiles * 2
 	call CopyData
-	call DrawDefaultTiles
-	ld a, LCDC_DEFAULT
+	call SGB_DrawTilemapForVRAMTransfer
+	ld a, LCDC_DEFAULT_SGB
 	ldh [rLCDC], a
 	ld hl, ChrTrn1Packet
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
+
+; second transfer
 	call DisableLCD
 	pop hl
 	ld de, _VRAM8800
 	ld bc, $80 tiles * 2
 	add hl, bc
 	call CopyData
-	call DrawDefaultTiles
-	ld a, LCDC_DEFAULT
+	call SGB_DrawTilemapForVRAMTransfer
+	ld a, LCDC_DEFAULT_SGB
 	ldh [rLCDC], a
 	ld hl, ChrTrn2Packet
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
+
 	xor a
 	ldh [rBGP], a
 	ret
 
 SGB_ClearVRAM:
     call DisableLCD
-	ld hl, _VRAM
+	ld de, _VRAM
 	ld bc, _SRAM - _VRAM
-	xor a
-	call ByteFill
+	call ClearBytes
 	ret
 
-PushSNESCodeToSGB:
+SGB_PushDefaultSNESCode:
 	ld hl, .PacketPointerTable
 	ld c, 9
 .loop
@@ -299,8 +254,8 @@ PushSNESCodeToSGB:
 	push hl
 	ld h, [hl]
 	ld l, a
-	call PushSGBPacket
-	call SGBDelayCycles
+	call SGB_PushPacket
+	call SGB_Delay
 	pop hl
 	inc hl
 	pop bc
@@ -319,15 +274,15 @@ PushSNESCodeToSGB:
 	dw DataSndPacket7
 	dw DataSndPacket8
 
-PushSGBPacket:
+SGB_PushPacket:
 	ld a, $1
 	ld [hDisableInputs], a
-	call _PushSGBPacket
+	call _SGB_PushPacket
 	xor a
 	ld [hDisableInputs], a
 	ret
 
-_PushSGBPacket:
+_SGB_PushPacket:
 	ld a, [hl]
 	and $7
 	ret z
@@ -364,10 +319,10 @@ _PushSGBPacket:
 	pop bc
 	dec b
 	ret z
-	call SGBDelayCycles
+	call SGB_Delay
 	jr .loop
 
-SGBDelayCycles:
+SGB_Delay:
 	ld de, 7000
 .wait
 	nop
