@@ -98,7 +98,7 @@ SECTION "Copyright Screen Title",ROMX[$421F],BANK[7]
     db "  FACEBALL 2000 DX  ", 0
 
 SECTION "Copyright Screen License",ROMX[$436F],BANK[7]
-    db "; 2024 HANDface Team", 0
+    db "; 2024 HANDFace Team", 0
 
 SECTION "Title Screen Logo",ROMX[$6634],BANK[2]
 	INCBIN "gfx/logo.2bpp"
@@ -195,8 +195,10 @@ BPSLogoInitHook::
     call CheckAndInitSGB
 .notsgb
     push de
+    call DisableLCD
     ld b, SCGB_BPS_LOGO
     call _LoadTileAttrs
+    call EnableLCD
     pop de
     di
     pop af

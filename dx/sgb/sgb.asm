@@ -122,6 +122,12 @@ DisableLCD::
 	ldh [rIE], a
 	ret
 
+EnableLCD::
+	ldh a, [rLCDC]
+	set LCDCB_ON, a
+	ldh [rLCDC], a
+	ret
+
 DrawDefaultTiles:
 ; Draw 240 tiles (2/3 of the screen) from tiles in VRAM
 	hlbgcoord 0, 0 ; BG Map 0

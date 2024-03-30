@@ -89,22 +89,26 @@ _LoadTileAttrs:
     call PushSGBPacket
     pop hl
     jp PushSGBPacket
-    _LoadCGBLayout_ReturnFromJumptable:
+
+_LoadCGBLayout_ReturnFromJumptable:
     ld c, $14
     ld hl, _SCRN0
     ld a, 1
     ld [rVBK], a
-.tile_attr_stat_check
-    ldh a, [rSTAT]
-    and a, 3
-    cp a, 2
-    jr nc, .tile_attr_stat_check
+;.tile_attr_stat_check
+;    ldh a, [rSTAT]
+;    and a, 3
+;    cp a, 2
+;    jr nc, .tile_attr_stat_check
+    push bc
+    call DisableLCD
+    pop bc
 .load_attrs
     ld a, [de]
     inc de
     ld [hli], a
     dec c
-    jr nz, .tile_attr_stat_check
+    jr nz, .load_attrs
 .go_to_next_row
     push de
     ld d, 0
@@ -113,8 +117,9 @@ _LoadTileAttrs:
     pop de
     ld c, $14
     dec b
-    jr nz, .tile_attr_stat_check
+    jr nz, .load_attrs
 .done_doing_attrs
+    call EnableLCD
     xor a
     ld [rVBK], a
     ret
