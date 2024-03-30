@@ -195,10 +195,8 @@ BPSLogoInitHook::
     call CheckAndInitSGB
 .notsgb
     push de
-    call DisableLCD
     ld b, SCGB_BPS_LOGO
     call _LoadTileAttrs
-    call EnableLCD
     pop de
     di
     pop af

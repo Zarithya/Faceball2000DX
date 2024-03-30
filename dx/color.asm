@@ -87,6 +87,7 @@ _LoadTileAttrs:
     call GetSGBLayout
     push de
     call PushSGBPacket
+	call SGBDelayCycles
     pop hl
     jp PushSGBPacket
 
