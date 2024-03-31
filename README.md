@@ -41,7 +41,7 @@ This would not have been possible without all the people above and the support o
 - RGBDS: https://github.com/gbdev/rgbds
 
 1. Put an unmodified Faceball 2000 ROM (CRC32: 7D890CD0) called "fb2k.gb" into this directory.
-2. In a terminal window, run `make` with no arguments to build with the recommended config (full 16 player feature & DX colorization/speed hack). You can also specify arguments to configure the build to your liking:
+2. In a terminal window, run `make` with no arguments to build with the recommended config (full 16 player feature & DX colorization/speed hack). You can also specify arguments to configure the build to your liking (e.g. `make FIX16=2 DX=1` represents the default config):
 
 | Variable Name | =1                               | =2                       |
 | ---           | ---                              | ---                      |
