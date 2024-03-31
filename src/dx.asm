@@ -1,5 +1,4 @@
 INCLUDE "inc/hardware.inc"
-INCLUDE "config.inc"
 INCLUDE "inc/ram.inc"
 INCLUDE "inc/const.inc"
 INCLUDE "inc/gfx.inc"
@@ -586,11 +585,11 @@ Waveform::
     ;db $49, $45, $47, $E1, $49, $45, $47, $E1, $10, $33, $A2, $8F, $DD, $E7, $60, $5E ; from BGB
     db $AC, $DD, $DA, $48, $36, $02, $CF, $16, $2C, $04, $E5, $2C, $AC, $DD, $DA, $48 ; from R-Type DX
 
-INCLUDE "dx/color.asm"
-INCLUDE "dx/sgb/sgb.asm"
+INCLUDE "src/color.asm"
+INCLUDE "src/sgb/sgb.asm"
 
-IF GDMA_VER > 0
-INCLUDE "gdma.asm"
+IF DEF(_USE_GDMA)
+INCLUDE "src/gdma.asm"
 ENDC
 
 SECTION "this only exists to pad the file size",ROMX[$4000],BANK[$0F]

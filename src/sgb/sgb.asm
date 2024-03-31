@@ -1,9 +1,9 @@
 DEF LCDC_DEFAULT_SGB 	EQU (1 << LCDCB_ON) | (1 << LCDCB_BGON)
 
-INCLUDE "dx/sgb/layouts.asm"
-INCLUDE "dx/sgb/blk_packets.asm"
-INCLUDE "dx/sgb/pal_packets.asm"
-INCLUDE "dx/sgb/ctrl_packets.asm"
+INCLUDE "src/sgb/layouts.asm"
+INCLUDE "src/sgb/blk_packets.asm"
+INCLUDE "src/sgb/pal_packets.asm"
+INCLUDE "src/sgb/ctrl_packets.asm"
 
 PredefPals:
 	table_width PALETTE_SIZE, PredefPals

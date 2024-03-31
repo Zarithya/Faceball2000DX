@@ -1,6 +1,5 @@
 INCLUDE "inc/hardware.inc"
 INCLUDE "inc/ram.inc"
-INCLUDE "config.inc"
 
 SECTION "Receive Serial Data",ROM0[$0EC7]
 jr_000_0ec7:
@@ -165,7 +164,7 @@ jr_000_1092:
     or $20
     ldh [rSB], a
 
-IF FULL16_VER > 0
+IF DEF(_FIX16_FULL)
 SECTION "Arena List Hook",ROM0[$26F1]
     ld c, a
     ld a, $03
