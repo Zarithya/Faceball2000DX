@@ -15,8 +15,8 @@ SGBBorderGFX:
 INCBIN "gfx/sgb/sgb_border.4bpp"
 
 SGBBorderMapAndPalettes:
-; interleaved tile ids and palette ids, without the center 20x18 screen area
-INCBIN "gfx/sgb/sgb_border.sgb.tilemap"
+; interleaved tile ids and palette ids
+INCBIN "gfx/sgb/sgb_border.bin"
 ; four SGB palettes of 16 colors each; only the first palette is used
 INCLUDE "gfx/sgb/sgb_border.pal"
 
@@ -174,24 +174,8 @@ SGBBorder_PushMapAndPal:
 	ld a, %11100100
 	ldh [rBGP], a
 	ld de, _VRAM8800
-	ld bc, (6 + SCREEN_WIDTH + 6) * 5 * 2
+	ld bc, 32 * 32 * 2
 	call CopyData
-	ld b, SCREEN_HEIGHT
-.loop
-	push bc
-	ld bc, 6 * 2
-	call CopyData
-	ld bc, SCREEN_WIDTH * 2
-	call ClearBytes
-	ld bc, 6 * 2
-	call CopyData
-	pop bc
-	dec b
-	jr nz, .loop
-	ld bc, (6 + SCREEN_WIDTH + 6) * 5 * 2
-	call CopyData
-	ld bc, $100
-	call ClearBytes
 	ld bc, 16 palettes
 	call CopyData
 	call SGB_DrawTilemapForVRAMTransfer

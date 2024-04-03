@@ -42,8 +42,6 @@ MACRO sgb_data_snd
 	db \3 ; length (1-11)
 ENDM
 
-; Crystal does not support SGB, so this is unused.
-
 PalTrnPacket:  sgb_pal_trn
 MltReq1Packet: sgb_mlt_req 1
 MltReq2Packet: sgb_mlt_req 2
