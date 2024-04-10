@@ -338,8 +338,8 @@ LoadPalettesForFade::
     cp a, IS_SGB
     jp nz, $08ca
 .sgb
-    ld a, $27
-    jp $08c4 ; force specific pal order for SGB compatibility
+    ld a, $27 ; force specific pal order for SGB compatibility
+    jp $08c4
 
 LoadPalettes::
     di
