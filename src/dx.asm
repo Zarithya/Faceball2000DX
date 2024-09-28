@@ -80,6 +80,35 @@ ClearVRAM:
     or c
     jr nz, .statcheck
     ret
+
+SECTION "Kiosk Mode Hooks For Conventions",ROMX[$7FE0],BANK[1]
+KioskModeHook1:
+    call $7e5a ; Call_001_7e5a
+    ld a, $01
+    ld [wPlayerNum], a
+    ld a, $50
+    ld [$c6ff], a
+    ret
+
+KioskModeHook2:
+    ld a, [$c902]
+    and a, $0f
+    cp a, $0f
+    ret nz
+    ld a, $00
+    ld [wPlayerNum], a
+    ret
+
+SECTION "Kiosk Mode Hooks Extra",ROM0[$0064]
+KioskModeHook3:
+    ld a, [wMenuIsSynced]
+    and a
+    jp nz, $5c56
+    ld a, [$da20]
+    cp $00
+    jp nz, $5ced
+    jp $5c56
+
 ;
 ; Misc hooks
 ;
@@ -180,6 +209,13 @@ UpdateVRAMGFX:
 
 SECTION "Prevent Null Byte Overwriting Space in Name",ROMX[$6576],BANK[1]
     jr z, $657f
+
+SECTION "Kiosk Mode Hook 1",ROM0[$09EB]
+    call KioskModeHook1
+
+SECTION "Kiosk Mode Hook 3",ROMX[$5C53],BANK[1]
+    jp KioskModeHook3
+
 ;
 ; Colorization Jumps
 ;
@@ -229,7 +265,7 @@ InterFaceInitHook::
     ld b, SCGB_INTERFACE
     call LoadTileAttrs
     pop de
-    ld a, [$C907]
+    ld a, [wPlayerCount]
     ret
 
 TeamPlayInitHook::
@@ -289,7 +325,7 @@ TitleScreenCreditsSwap::
     ld hl, DXCreditsTitle
 .draw
     call $1d29
-    ret
+    jp KioskModeHook2
 
 ; Prevent reading of inputs during SGB transfers (SGB transfers are done through joypad register)
 InputReadHook::

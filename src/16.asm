@@ -224,7 +224,14 @@ MainMenuActions:
 SECTION "Draw Main Menu Hook",ROMX[$5F71],BANK[1]
     call DrawMainMenuHook
 
-SECTION "Choose Arena Select Button",ROMX[$6DD2],BANK[1]
+SECTION "Choose Arena Fixes",ROMX[$6DCA],BANK[1]
+ChooseArena_LoadMenu:
+    xor a
+    ld b, $00
+    ld hl, $6d9a
+    call $5a56 ; LoadMenuData
+    ret
+
 ChooseArena_SelectButton:
     ld a, [wMenuItemCount]
     ld b, a
@@ -278,7 +285,7 @@ StartCyberscapeFromMainMenuHook:
     ldh a, [hPlayerCount]
     cp 5 ; check for >4 players
     ret nc
-    jp $5d47
+    jp $5d47 ; StartCyberscapeFromMainMenu
 
 DrawMainMenuHook:
     ldh a, [hPlayerCount]
