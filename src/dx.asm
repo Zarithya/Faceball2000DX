@@ -178,6 +178,8 @@ SECTION "UpdateVRAMGFX Hook",ROM0[$12D2]
 UpdateVRAMGFX:
     call UpdateVRAMGFXHook
 
+SECTION "Prevent Null Byte Overwriting Space in Name",ROMX[$6576],BANK[1]
+    jr z, $657f
 ;
 ; Colorization Jumps
 ;
