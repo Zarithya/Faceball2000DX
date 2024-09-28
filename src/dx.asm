@@ -144,6 +144,9 @@ SECTION "Congrats Screen Hook",ROMX[$4166],BANK[1]
 ;
 ; Colorization Hooks
 ;
+SECTION "Soft Reset Hook",ROMX[$423C],BANK[1]
+    call SoftResetHook
+
 SECTION "Fade Hook",ROM0[$08BF]
     jp LoadPalettesForFade
 
@@ -265,6 +268,15 @@ CreditsInitHook::
     ld b, SCGB_CREDITS
     call LoadTileAttrs
     pop de
+    ret
+
+SoftResetHook::
+    ld a, 1
+    ld [rVBK], a
+    call ClearVRAM
+    xor a
+    ld [rVBK], a
+    call $13d6 ; PrepareCopyrightTilemapUpdate
     ret
 
 ; Switch between original title screen bottom row credits and DX hack credits every few frames

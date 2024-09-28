@@ -1,3 +1,4 @@
+DEF wButtonsHeld EQU $c790
 DEF wFadeStatus EQU $c904
 DEF wFadeLevel EQU $c905
 DEF wPlayerCount EQU $c907
