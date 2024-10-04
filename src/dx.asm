@@ -81,23 +81,32 @@ ClearVRAM:
     jr nz, .statcheck
     ret
 
-SECTION "Kiosk Mode Hooks For Conventions",ROMX[$7FE0],BANK[1]
+SECTION "New Hook",ROM0[$03e0]
 KioskModeHook1:
-    call $7e5a ; Call_001_7e5a
+    xor a
+    ld [hl+], a
+    ld a, l
+    and a
+    jr nz, KioskModeHook1
     ld a, $01
     ld [wPlayerNum], a
-    ld a, $50
-    ld [$c6ff], a
-    ret
+    jp $09ca
 
+SECTION "Other Hook",ROM0[$09BB]
+    jp KioskModeHook1
+
+SECTION "Kiosk Mode Hooks For Conventions",ROMX[$7FE0],BANK[1]
 KioskModeHook2:
     ld a, [$c902]
-    and a, $0f
-    cp a, $0f
+    and a, $86
+    cp a, $86
     ret nz
     ld a, $00
     ld [wPlayerNum], a
     ret
+
+SECTION "Always Check First Player",ROMX[$794A],BANK[1]
+    jr z, $795f
 
 SECTION "Kiosk Mode Hooks Extra",ROM0[$0064]
 KioskModeHook3:
@@ -211,7 +220,7 @@ SECTION "Prevent Null Byte Overwriting Space in Name",ROMX[$6576],BANK[1]
     jr z, $657f
 
 SECTION "Kiosk Mode Hook 1",ROM0[$09EB]
-    call KioskModeHook1
+;    call KioskModeHook1
 
 SECTION "Kiosk Mode Hook 3",ROMX[$5C53],BANK[1]
     jp KioskModeHook3
