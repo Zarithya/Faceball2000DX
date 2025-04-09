@@ -149,6 +149,11 @@ UpdateFramebuffer::
     ld a, [$C9A2]
     cp a, 2
     ret z
+    ; Just in case, disable VBlank since it calls this
+    ldh a, [rIE]
+    push af
+    and LOW(~IEF_VBLANK)
+    ldh [rIE], a
     ldh a, [hCurBank]
     push af
     ld a, BANK(realUpdateFramebuffer)
@@ -158,6 +163,8 @@ UpdateFramebuffer::
     pop af
     ldh [hCurBank], a
     ld [rROMB0], a
+    pop af
+    ldh [rIE], a
     ret
 
 SECTION "ACTUAL Update framebuffer", ROMX[$4000], BANK[15]
@@ -205,21 +212,14 @@ realUpdateFramebuffer::
     ldh [rHDMA5], a
     xor a
     ldh [rVBK], a
+    ei
 
     ; Now copy enough tiles using chunky GDMA to leave the rest to HDMA
-    ld l, LOW(rHDMA1)
-    ld a, HIGH(BUFFER_SRC + $800)
-    ld [hli], a
-    ld a, LOW(BUFFER_SRC + $800)
-    ld [hli], a
-    ld a, HIGH(BUFFER_TRG + $800)
-    ld [hli], a
-    ld a, LOW(BUFFER_TRG + $800)
-    ld [hli], a
-
+    ld l, LOW(rHDMA5)
     ld bc, ((COPY_SIZE / COPYCHUNK_SIZE) << 8) | LOW(rSTAT)
     ld de, (LOW(%11) << 8) | LOW(~%11)
 .copyLoop:
+    di
     ; First, wait for MODE 3
     :ldh a, [c]
     or e
@@ -233,19 +233,13 @@ realUpdateFramebuffer::
 
     ; Spit out chunked part
     ld [hl], HDMA5F_MODE_GP | ((COPYCHUNK_SIZE >> 4) - 1)
+    ei
     dec b
     jr nz, .copyLoop
 
     ; Copy the remaining tiles using simple HDMA
-    ld l, LOW(rHDMA1)
-    ld a, HIGH(BUFFER_SRC + $800 + COPY_SIZE)
-    ld [hli], a
-    ld a, LOW(BUFFER_SRC + $800 + COPY_SIZE)
-    ld [hli], a
-    ld a, HIGH(BUFFER_TRG + $800 + COPY_SIZE)
-    ld [hli], a
-    ld a, LOW(BUFFER_TRG + $800 + COPY_SIZE)
-    ld [hli], a
+    ld l, LOW(rHDMA5)
+    di
     ; ...Just in case, make sure we don't start on mode 0
     :ldh a, [rSTAT]
     and STATF_LCD
