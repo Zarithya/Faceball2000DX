@@ -11,7 +11,8 @@ FEATURES:
 
 ### Credits:
 - [Zarithya](https://twitch.tv/Zarithya): 16 player fixes, SGB support, etc. (v2.0)
-- [kkzero](https://github.com/kkzero241): Colorization and wave RAM initialization (from release v1.0)
+- [kkzero](https://github.com/kkzero241): Colorization, original GDMA Renderer and wave RAM initialization (from release v1.0)
+- [Coffee 'Valen' Bat](https://github.com/coffeevalenbat): Rewritten GDMA Renderer and GBC lockout
 - [AntonioND](https://github.com/AntonioND): Original [double-speed mod](http://www.skylyrac.net/2014-06-04-faceball-2000-double-speed-mod-v0-1.html)
 - [planetclue](https://planetclue.com): SGB border design
 - [Stop Skeletons From Fighting](https://youtube.com/@StopSkeletonsFromFighting): Bringing us all together and documenting the ride
@@ -53,11 +54,12 @@ This would not have been possible without all the people above and the support o
 Also included is a symbol map (fb2k_dx.sym) that can aid you in looking at this game's innards yourself!
 
 #### IMPORTANT: GDMA VS. NO GDMA
-When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled).
-This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and innacurate/untested systems/emulators.
+When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled). This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and innacurate/untested systems/emulators.
+
+The GDMA renderer is still untested on many hardware revisions, but should work on any Game Boy Color or Game Boy Advance system. Please report any found incompatibilities with official Nintendo hardware.
 
 ##### GDMA VERSION COMPATIBILITY:
-Emulator:
+Emulators:
 - BGB - Pretty much flawless
 - Sameboy - Pretty much flawless
 - Mesen2 - Pretty much flawless
