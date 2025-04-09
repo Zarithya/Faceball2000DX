@@ -197,8 +197,12 @@ BPSLogoInitHook::
     ld [rROMB0 + $100], a
     ei
     call LoadWaveform
+IF DEF(_USE_GDMA)
+    call gbcLockcheckHook
+ELSE
     ld a, [hCGB]
-    cp IS_DMG ; SGB identifies as DMG on boot
+    or a ; cp IS_DMG ; SGB identifies as DMG on boot    
+ENDC
     jr nz, .notsgb
     call SGB_Init
 .notsgb

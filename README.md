@@ -46,7 +46,7 @@ This would not have been possible without all the people above and the support o
 | Variable Name | =1                               | =2                       |
 | ---           | ---                              | ---                      |
 | FIX16         | Basic 16 player fix              | Full completed feature   |
-| DX            | Colorization, speed improvements | GDMA renderer (unstable) |
+| DX            | Colorization, speed improvements | GDMA renderer (See below)|
 
 3. If everything went well, a ROM with your desired changes will be created in the `build` directory.
 
@@ -54,21 +54,19 @@ Also included is a symbol map (fb2k_dx.sym) that can aid you in looking at this 
 
 #### IMPORTANT: GDMA VS. NO GDMA
 When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled).
-This uses the GBC's General DMA channel to render the 3D display faster, but has some trade-offs.
-Namely, it has issues with several emulators and hardware versions, as well as with link connectivity.
-It is experimental and not recommended for most players.
+This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and innacurate/untested systems/emulators.
 
 ##### GDMA VERSION COMPATIBILITY:
 Emulator:
 - BGB - Pretty much flawless
-- VBA - Pretty much flawless
-- Sameboy - Playable, but suffers graphical artifacts on screen
-- mGBA - Playable, but suffers graphical artifacts on screen
+- Sameboy - Pretty much flawless
+- Mesen2 - Pretty much flawless
+- Emulicious - Pretty much flawless
+- VBA - Mostly flawless, but missing a small portion of the screen on the bottom right
+- VBA-M - Crashes after title screen (?)
+- GoombaColor - Crashes after title screen (?)
 
 Hardware:
 - DMG, MGB, SGB - Incompatible
-- CGB-001 - Playable, but suffers severe graphical glitchiness
-- AGB-001 - Playable, but suffers severe graphical glitchiness
-- AGS-001 - Untested
-- AGS-101 - Pretty much flawless, other than the top tile row flickering
-- DOL-017 - Untested
+- CGB-001 - Pretty much flawless
+- AGB/AGS - Untested

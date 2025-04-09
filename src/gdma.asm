@@ -1,3 +1,97 @@
+; Based on kkzero's initial DMA work, rewritten and optimized by Coffee 'Valen' Bat
+SECTION "Color lockout hook part 1", ROM0[$0023]
+DEF GFX_ADDR = $9634
+gbcLockcheckHook:
+    ldh a, [hCGB]
+    or a
+    jr gbcLockcheck.part2
+SECTION "Color lockout hook part 2", ROM0[$002B]
+gbcLockcheck.part2:
+    ret nz
+    di
+    jr gbcLockcheck.part3
+
+SECTION "Color lockout hook part 3", ROM0[$0033]
+gbcLockcheck.part3:
+    ; Before jumping to lockout code, copy data to VRAM
+    call DisableLCD
+    jr gbcLockcheck.part4
+
+SECTION "Color lockout hook part 4", ROM0[$0064]
+gbcLockcheck.part4:
+    ld hl, rROMB0 | (GFX_ADDR >> 14)
+    ld [hl], l
+    ld hl, (GFX_ADDR & $7FFF) + $4000
+    ld de, $8000
+    ld bc, 128 * 16
+    :ld a, [hli]
+    ld [de], a
+    inc de
+    dec bc
+    ld a, c
+    or b
+    jr nz, :-
+    ld hl, rROMB0 | BANK(gbcLockout)
+    ld [hl], l
+    jp gbcLockout
+
+SECTION "GBC Lockout code", ROMX[$7000], BANK[15]
+gbcLockoutText:
+    db "                    "
+    db "                    "
+    db " ", $63 + " ", "FACEBALL 2000 DX", $63 + " "," "
+    db "                    "
+    db " The GDMA version of"
+    db "this romhack is only"
+    db "  compatible with   "
+    db "   color enhanced   "
+    db "      systems.      "
+    db "                    "
+    db "If you're looking to"
+    db "  play on not-color "
+    db " compatible systems,"
+    db "please look for the "
+    db " NO-GDMA version of "
+    db "    this romhack.   "
+    db "                    "
+    db "                    "
+
+    ; Setup screen
+gbcLockout:
+    di
+    ld hl, gbcLockoutText
+    ld de, $9800
+    ld b, 18
+.LineLoop:
+    ld c, 20
+.rowLoop:
+    ld a, [hli]
+    sub " "
+    ld [de], a
+    inc de
+    dec c
+    jr nz, .rowLoop
+    ld a, e
+    add 32 - 20
+    ld e, a
+    adc d
+    sub e
+    ld d, a
+    dec b
+    jr nz, .LineLoop
+    ; FInally, setup LCD
+    ld a, $E4
+    ldh [rBGP], a
+    xor a
+    ldh [rSCX], a
+    ldh [rSCY], a
+    ld a, LCDCF_ON | LCDCF_BGON | LCDCF_BG8000
+    ldh [rLCDC], a
+.Idle:
+    halt
+    nop
+    jr .Idle
+
 SECTION "Buffer RAM Pointers",ROM0[$0300]
     dw $CA00
     dw $CA02
@@ -138,7 +232,7 @@ SECTION "updategameplaystuff LCDC fix", ROM0[$0808]
 SECTION "updategameplaystuff LCDC fix 2", ROM0[$081C]
     set LCDCB_BLKS, a
 
-; Changes starting buffer tile index from 0:8804 to 1:8040
+; Changes starting buffer tile index from 0:8804 to 1:8004
 SECTION "Framebuffer tilemap fix", ROM0[$37db]
     ld d, $04
 
@@ -169,21 +263,22 @@ UpdateFramebuffer::
 
 SECTION "ACTUAL Update framebuffer", ROMX[$4000], BANK[15]
 ;; Chunky GDMA renderer for Faceball 2000 DX
-;; By Coffee 'Valen' Bat
 
 ; Chunky GDMA code that relies on HDMA address registers being consistent and incremented between copies
-; THis behaviour seems to be correct on accurate emulators and my own GBC, Keeping both codes in case I find a hw rev that works differently
+; THis behaviour seems to be correct on accurate emulators and my own GBC
 ; Supposedly GDMA won't work if you don't reset the address regs (HDMA1-4) before firing the copy,
 ; But... on BGB, Sameboy, Mesen2 AND my GBC (CPU-CGB-C), it just... works?
 ; Still gotta do further testing
 ; (Looking at you AGS!)
 
-DEF COPYCHUNK_SIZE  EQU 32
 ; The lowest ceiling for the Chunky GDMA part is ~70 tiles, but since we copy the remainder HDMA tiles *while* we clear the buffer, 
 ; we gotta copy less HDMA tiles to finish copying HDMA tiles before the CPU can clear the whole buffer, so 74 does it
 DEF COPY_SIZE       EQU 74 * $10
+DEF COPYCHUNK_SIZE  EQU 32
 DEF BUFFER_SRC      EQU $CA00
 DEF BUFFER_TRG      EQU _VRAM8000 + $40
+DEF GDMA_LEN        EQU 128
+DEF SHORT_GDMA_LEN  EQU 12
 realUpdateFramebuffer::
     ; First, just in case, set LCDC correctly
     ld hl, rLCDC
@@ -201,18 +296,22 @@ realUpdateFramebuffer::
     ; Set bank
     ld l, LOW(rIF)
     ld a, 1
+    ld bc, ((SHORT_GDMA_LEN - 1) << 8) | LOW(rHDMA5)
     di
     ldh [rVBK], a
-    ld a, 128 - 1
+    ld a, GDMA_LEN - 1
     ; Now wait for vblank
     res IEB_VBLANK, [hl]
     :bit IEB_VBLANK, [hl]
     jr z, :-
     ; Trigger DMA as soon as we hit the start of Vblank, this means we don't run the risk of mode 3 creeping in
-    ldh [rHDMA5], a
+    ldh [c], a
     xor a
     ldh [rVBK], a
+    ; According to pandocs, we might just have enough room for a few more tiles...?
+    ld a, b
     ei
+    ldh [c], a
 
     ; Now copy enough tiles using chunky GDMA to leave the rest to HDMA
     ld l, LOW(rHDMA5)
@@ -232,8 +331,8 @@ realUpdateFramebuffer::
     jr nz, :-
 
     ; Spit out chunked part
-    ld [hl], HDMA5F_MODE_GP | ((COPYCHUNK_SIZE >> 4) - 1)
     ei
+    ld [hl], HDMA5F_MODE_GP | ((COPYCHUNK_SIZE >> 4) - 1)
     dec b
     jr nz, .copyLoop
 
@@ -244,14 +343,17 @@ realUpdateFramebuffer::
     :ldh a, [rSTAT]
     and STATF_LCD
     jr z, :-
-    ld [hl], ((252 - 128 - (COPY_SIZE >> 4)) - 1) | HDMA5F_MODE_HBL
+    ei
+    ld [hl], ((252 - (GDMA_LEN + SHORT_GDMA_LEN + (COPY_SIZE >> 4))) - 1) | HDMA5F_MODE_HBL
 
-    ld [$C95D], sp
-    ld sp, $D9C2
-    call $13B8
-    ld hl, $C95D
-    ld a, [hli]
-    ld h, [hl]
-    ld l, a
-    ld sp, hl
-    reti
+    ; Now time to clean that buffer
+    ld hl, BUFFER_SRC
+    ld c, 252 / 4
+    xor a
+.clearLoop:
+REPT 64
+    ld [hli], a
+ENDR
+    dec c
+    jr nz, .clearLoop
+    ret
