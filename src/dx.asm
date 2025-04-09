@@ -19,7 +19,11 @@ SECTION "Title",ROM0[$0134]
     db "FACEBALL 2000DX"
 
 SECTION "Target System",ROM0[$0143]
+IF DEF(_USE_GDMA)
     db $80 ; DMG & CGB
+ELSE
+    db $C0 ; GBC Only!
+ENDC
 
 SECTION "New Licensee Code",ROM0[$0144]
     db "8B" ; Bullet-Proof Software (New License)

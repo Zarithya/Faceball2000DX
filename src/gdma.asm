@@ -124,75 +124,140 @@ SECTION "Fill Buffer Stack Half 1",ROM0[$1399]
 SECTION "Framebuffer Stack Clear",ROM0[$13B8]
     ld hl, $CA00
 
-SECTION "Update Framebuffer",ROM0[$13F0]
+; Since were no longer using the upper part of vram
+SECTION "updategameplaystuff LCDC fix", ROM0[$0808]
+    nop
+    nop
+    
+    nop
+    nop
+
+    nop
+    nop
+
+SECTION "updategameplaystuff LCDC fix 2", ROM0[$081C]
+    set LCDCB_BLKS, a
+
+; Changes starting buffer tile index from 0:8804 to 1:8040
+SECTION "Framebuffer tilemap fix", ROM0[$37db]
+    ld d, $04
+
+; I ran out of ROM0 for this one, whoops
+SECTION "Update Framebuffer hook",ROM0[$13F0]
 UpdateFramebuffer::
+    ; No idea why this must be 2, maybe it's the game state?
     ld a, [$C9A2]
     cp a, 2
     ret z
-    ld [$C95D], sp
-    ld hl, _VRAM8800 + $40
+    ldh a, [hCurBank]
+    push af
+    ld a, BANK(realUpdateFramebuffer)
+    ldh [hCurBank], a
+    ld [rROMB0], a
+    call realUpdateFramebuffer
+    pop af
+    ldh [hCurBank], a
+    ld [rROMB0], a
+    ret
+
+SECTION "ACTUAL Update framebuffer", ROMX[$4000], BANK[15]
+;; Chunky GDMA renderer for Faceball 2000 DX
+;; By Coffee 'Valen' Bat
+
+; Chunky GDMA code that relies on HDMA address registers being consistent and incremented between copies
+; THis behaviour seems to be correct on accurate emulators and my own GBC, Keeping both codes in case I find a hw rev that works differently
+; Supposedly GDMA won't work if you don't reset the address regs (HDMA1-4) before firing the copy,
+; But... on BGB, Sameboy, Mesen2 AND my GBC (CPU-CGB-C), it just... works?
+; Still gotta do further testing
+; (Looking at you AGS!)
+
+DEF COPYCHUNK_SIZE  EQU 32
+; The lowest ceiling for the Chunky GDMA part is ~70 tiles, but since we copy the remainder HDMA tiles *while* we clear the buffer, 
+; we gotta copy less HDMA tiles to finish copying HDMA tiles before the CPU can clear the whole buffer, so 74 does it
+DEF COPY_SIZE       EQU 74 * $10
+DEF BUFFER_SRC      EQU $CA00
+DEF BUFFER_TRG      EQU _VRAM8000 + $40
+realUpdateFramebuffer::
+    ; First, just in case, set LCDC correctly
+    ld hl, rLCDC
+    set LCDCB_BLKS, [hl]
+
+    ; Copy first chunk using GDMA (The way Nintendo intended)
+    ld l, LOW(rHDMA1)
+    ld a, HIGH(BUFFER_SRC)
+    ld [hli], a
+    ld a, LOW(BUFFER_SRC)
+    ld [hli], a
+    ld a, HIGH(BUFFER_TRG)
+    ld [hli], a
+    ld [hl], LOW(BUFFER_TRG)
+    ; Set bank
+    ld l, LOW(rIF)
+    ld a, 1
     di
-    ld sp, $CA00
-    ld b, 2
-;.stat_check_1
-    ;ldh a, [rSTAT]
-    ;and a, 2
-    ;jr z, .stat_check_1
-;.stat_check_2
-    ;ldh a, [rSTAT]
-    ;and a, 2
-    ;jr z, .stat_check_2
-.prepare_transfer
-    ld a, h
-    ldh [rHDMA3], a
-    ld a, l
-    ldh [rHDMA4], a
-    ld hl, sp + 0
-    ld a, h
-    ldh [rHDMA1], a
-    ld a, l
-    ldh [rHDMA2], a
-.check_ly
-    ldh a, [rLY]
-    sub a, $78
-    jr c, .set_tilespace_to_display
-.set_tilespace_to_hud
-    ldh a, [rLCDC]
-    set 4, a
-    ldh [rLCDC], a
-    jr .check_if_vblank
-.set_tilespace_to_display
-    ldh a, [rLCDC]
-    res 4, a
-    ldh [rLCDC], a
-.check_if_vblank
-    ldh a, [rSTAT]
-    and a, 3
-    cp 1
-    jr nz, .check_ly
-.init_transfer
-    ld a, $7D
+    ldh [rVBK], a
+    ld a, 128 - 1
+    ; Now wait for vblank
+    res IEB_VBLANK, [hl]
+    :bit IEB_VBLANK, [hl]
+    jr z, :-
+    ; Trigger DMA as soon as we hit the start of Vblank, this means we don't run the risk of mode 3 creeping in
     ldh [rHDMA5], a
-    ;ld sp, $C9A1
-    ;ei
-;.do_stat_check_for_buffer
-    ;ldh a, [rSTAT]
-    ;and a, 2
-    ;jr z, .do_stat_check_for_buffer
-    ;di
-.check_if_buffer_fill_done
+    xor a
+    ldh [rVBK], a
+
+    ; Now copy enough tiles using chunky GDMA to leave the rest to HDMA
+    ld l, LOW(rHDMA1)
+    ld a, HIGH(BUFFER_SRC + $800)
+    ld [hli], a
+    ld a, LOW(BUFFER_SRC + $800)
+    ld [hli], a
+    ld a, HIGH(BUFFER_TRG + $800)
+    ld [hli], a
+    ld a, LOW(BUFFER_TRG + $800)
+    ld [hli], a
+
+    ld bc, ((COPY_SIZE / COPYCHUNK_SIZE) << 8) | LOW(rSTAT)
+    ld de, (LOW(%11) << 8) | LOW(~%11)
+.copyLoop:
+    ; First, wait for MODE 3
+    :ldh a, [c]
+    or e
+    inc a
+    jr nz, :-
+
+    ; Now for MODE 0
+    :ldh a, [c]
+    and d
+    jr nz, :-
+
+    ; Spit out chunked part
+    ld [hl], HDMA5F_MODE_GP | ((COPYCHUNK_SIZE >> 4) - 1)
     dec b
-    jr z, .done_filling_buffer
-    ld sp, $D1E0
-    ld hl, _VRAM9000 + $20
-    jr .prepare_transfer
-.done_filling_buffer
+    jr nz, .copyLoop
+
+    ; Copy the remaining tiles using simple HDMA
+    ld l, LOW(rHDMA1)
+    ld a, HIGH(BUFFER_SRC + $800 + COPY_SIZE)
+    ld [hli], a
+    ld a, LOW(BUFFER_SRC + $800 + COPY_SIZE)
+    ld [hli], a
+    ld a, HIGH(BUFFER_TRG + $800 + COPY_SIZE)
+    ld [hli], a
+    ld a, LOW(BUFFER_TRG + $800 + COPY_SIZE)
+    ld [hli], a
+    ; ...Just in case, make sure we don't start on mode 0
+    :ldh a, [rSTAT]
+    and STATF_LCD
+    jr z, :-
+    ld [hl], ((252 - 128 - (COPY_SIZE >> 4)) - 1) | HDMA5F_MODE_HBL
+
+    ld [$C95D], sp
     ld sp, $D9C2
     call $13B8
-    ld a, [$C95D]
+    ld hl, $C95D
+    ld a, [hli]
+    ld h, [hl]
     ld l, a
-    ld a, [$C95E]
-    ld h, a
     ld sp, hl
-    ei
-    ret
+    reti
