@@ -68,7 +68,10 @@ Emulators:
 - VBA-M - Crashes after title screen (?)
 - GoombaColor - Crashes after title screen (?)
 
-Hardware:
+Official Nintendo Hardware:
 - DMG, MGB, SGB - Incompatible
 - CGB-001 - Pretty much flawless
 - AGB/AGS - Untested
+
+Hardware Clones:
+- FunnyPlaying FP-GBC FW1.14 - Same as CGB, but has crashed on me at least once.
