@@ -26,7 +26,7 @@ FEATURES:
 This would not have been possible without all the people above and the support of many more. Thank you!
 
 #### v2.0.1 (unreleased)
-- Added working GDMA renderer code (thanks Valen!)
+- Fixed GDMA renderer code (thanks Valen!)
 
 #### v2.0 (2024)
 - Fixed 16 player support (official release has support for only up to 15 players due to an off-by-one mistake)
