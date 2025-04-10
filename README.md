@@ -25,6 +25,9 @@ FEATURES:
 
 This would not have been possible without all the people above and the support of many more. Thank you!
 
+#### v2.0.1 (unreleased)
+- Added working GDMA renderer code (thanks Valen!)
+
 #### v2.0 (2024)
 - Fixed 16 player support (official release has support for only up to 15 players due to an off-by-one mistake)
 - Finished support for >4 players (disabled certain features and maps that do not work for high numbers of players)
@@ -54,7 +57,7 @@ This would not have been possible without all the people above and the support o
 Also included is a symbol map (fb2k_dx.sym) that can aid you in looking at this game's innards yourself!
 
 #### IMPORTANT: GDMA VS. NO GDMA
-When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled). This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and innacurate/untested systems/emulators.
+When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled). This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and inaccurate/untested systems/emulators.
 
 The GDMA renderer is still untested on many hardware revisions, but should work on any Game Boy Color or Game Boy Advance system. Please report any found incompatibilities with official Nintendo hardware.
 
