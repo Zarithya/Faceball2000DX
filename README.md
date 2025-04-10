@@ -11,7 +11,8 @@ FEATURES:
 
 ### Credits:
 - [Zarithya](https://twitch.tv/Zarithya): 16 player fixes, SGB support, etc. (v2.0)
-- [kkzero](https://github.com/kkzero241): Colorization and wave RAM initialization (from release v1.0)
+- [kkzero](https://github.com/kkzero241): Colorization, original GDMA Renderer and wave RAM initialization (from release v1.0)
+- [Coffee 'Valen' Bat](https://github.com/coffeevalenbat): Rewritten GDMA Renderer and GBC lockout
 - [AntonioND](https://github.com/AntonioND): Original [double-speed mod](http://www.skylyrac.net/2014-06-04-faceball-2000-double-speed-mod-v0-1.html)
 - [planetclue](https://planetclue.com): SGB border design
 - [Stop Skeletons From Fighting](https://youtube.com/@StopSkeletonsFromFighting): Bringing us all together and documenting the ride
@@ -23,6 +24,9 @@ FEATURES:
 - Rob Champagne, Michael Park, Darren Stone, and the rest of the Faceball 2000 & MIDI Maze dev teams: Dreaming big and making this all possible
 
 This would not have been possible without all the people above and the support of many more. Thank you!
+
+#### v2.0.1 (unreleased)
+- Fixed GDMA renderer code (thanks Valen!)
 
 #### v2.0 (2024)
 - Fixed 16 player support (official release has support for only up to 15 players due to an off-by-one mistake)
@@ -46,29 +50,31 @@ This would not have been possible without all the people above and the support o
 | Variable Name | =1                               | =2                       |
 | ---           | ---                              | ---                      |
 | FIX16         | Basic 16 player fix              | Full completed feature   |
-| DX            | Colorization, speed improvements | GDMA renderer (unstable) |
+| DX            | Colorization, speed improvements | GDMA renderer (See below)|
 
 3. If everything went well, a ROM with your desired changes will be created in the `build` directory.
 
 Also included is a symbol map (fb2k_dx.sym) that can aid you in looking at this game's innards yourself!
 
 #### IMPORTANT: GDMA VS. NO GDMA
-When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled).
-This uses the GBC's General DMA channel to render the 3D display faster, but has some trade-offs.
-Namely, it has issues with several emulators and hardware versions, as well as with link connectivity.
-It is experimental and not recommended for most players.
+When playing on Game Boy Color or Advance (or emulators thereof), you have the option of enabling the GDMA renderer (either by using the patch or by building with it enabled). This uses the GBC's General DMA channel to render the 3D display faster, but may cause issues with link cable connectivity and inaccurate/untested systems/emulators.
+
+The GDMA renderer is still untested on many hardware revisions, but should work on any Game Boy Color or Game Boy Advance system. Please report any found incompatibilities with official Nintendo hardware.
 
 ##### GDMA VERSION COMPATIBILITY:
-Emulator:
+Emulators:
 - BGB - Pretty much flawless
-- VBA - Pretty much flawless
-- Sameboy - Playable, but suffers graphical artifacts on screen
-- mGBA - Playable, but suffers graphical artifacts on screen
+- Sameboy - Pretty much flawless
+- Mesen2 - Pretty much flawless
+- Emulicious - Pretty much flawless
+- VBA - Mostly flawless, but missing a small portion of the screen on the bottom right
+- VBA-M - Crashes after title screen (?)
+- GoombaColor - Crashes after title screen (?)
 
-Hardware:
+Official Nintendo Hardware:
 - DMG, MGB, SGB - Incompatible
-- CGB-001 - Playable, but suffers severe graphical glitchiness
-- AGB-001 - Playable, but suffers severe graphical glitchiness
-- AGS-001 - Untested
-- AGS-101 - Pretty much flawless, other than the top tile row flickering
-- DOL-017 - Untested
+- CGB-001 - Pretty much flawless
+- AGB/AGS - Untested
+
+Hardware Clones:
+- FunnyPlaying FP-GBC FW1.14 - Same as CGB, but has crashed on me at least once.
