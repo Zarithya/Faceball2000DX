@@ -265,20 +265,39 @@ SECTION "ACTUAL Update framebuffer", ROMX[$4000], BANK[15]
 ;; Chunky GDMA renderer for Faceball 2000 DX
 
 ; Chunky GDMA code that relies on HDMA address registers being consistent and incremented between copies
-; THis behaviour seems to be correct on accurate emulators and my own GBC
-; Supposedly GDMA won't work if you don't reset the address regs (HDMA1-4) before firing the copy,
-; But... on BGB, Sameboy, Mesen2 AND my GBC (CPU-CGB-C), it just... works?
+; This behaviour seems to be correct on accurate emulators and my own GBC
+; Supposedly GDMA won't work if you don't re-set the address regs (HDMA1-4) before firing the copy,
+; But... on BGB, Sameboy, Mesen2, my FPGBC, my GB Boy Colour AND my GBC (CPU-CGB-C), it just... works?
 ; Still gotta do further testing
 ; (Looking at you AGS!)
 
+; If my math isn't wrong...
+; The shortest HBlank FB2K ever gets is 204 (-7 for screen shake) = 197 dots
+; Add to it OAM Scan (80 dots) == 277 dots, with a higher ceiling of 284 dots
+; GDMA transfers one tile in 32 dots, meaning we can transfer up to 8 tiles per scanline
+; If we take into account possible shortcomings (wait loops, code execution, etc), a good target is 7 tiles per line, or 224 dots.
+
 ; The lowest ceiling for the Chunky GDMA part is ~70 tiles, but since we copy the remainder HDMA tiles *while* we clear the buffer, 
-; we gotta copy less HDMA tiles to finish copying HDMA tiles before the CPU can clear the whole buffer, so 74 does it
-DEF COPY_SIZE       EQU 74 * $10
-DEF COPYCHUNK_SIZE  EQU 32
+; we gotta copy less HDMA tiles to finish copying HDMA tiles before the CPU can clear the whole buffer, so 77 does it
+
+; The current "stream map" looks like this:
+; - Wait for start of VBlank 
+; - Fire 128-Tile GDMA copy
+; - Fire 12-tile GDMA copy to use up the rest of VBlank
+; - Repeat 11 times:
+;   - Wait for mode 3 (PPU Rendering)
+;   - Wait for mode 0 (HBlank)
+;   - Fire 7-tile GDMA (Spans HBlank and some of OAM-Scan)
+; - Fire 35-tile HDMA copy alongside clearing the video buffer
+; Overall, this means the routine takes ~52 scanlines from the initial GDMA copy to finishing the buffer clear
+
 DEF BUFFER_SRC      EQU $CA00
 DEF BUFFER_TRG      EQU _VRAM8000 + $40
 DEF GDMA_LEN        EQU 128
 DEF SHORT_GDMA_LEN  EQU 12
+DEF CHUNKY_GDMA_LEN EQU 77
+DEF CHUNKY_TILES_PER_LINE   EQU 7
+DEF HDMA_LEN        EQU 252 - (GDMA_LEN + SHORT_GDMA_LEN + CHUNKY_GDMA_LEN)
 realUpdateFramebuffer::
     ; First, just in case, set LCDC correctly
     ld hl, rLCDC
@@ -315,24 +334,24 @@ realUpdateFramebuffer::
 
     ; Now copy enough tiles using chunky GDMA to leave the rest to HDMA
     ld l, LOW(rHDMA5)
-    ld bc, ((COPY_SIZE / COPYCHUNK_SIZE) << 8) | LOW(rSTAT)
-    ld de, (LOW(%11) << 8) | LOW(~%11)
+    ld bc, ((CHUNKY_GDMA_LEN / CHUNKY_TILES_PER_LINE) << 8) | LOW(rSTAT)
+    ld de, ((HDMA5F_MODE_GP | (CHUNKY_TILES_PER_LINE - 1)) << 8) | %11
 .copyLoop:
     di
     ; First, wait for MODE 3
     :ldh a, [c]
-    or e
-    inc a
+    and e
+    cp e
     jr nz, :-
 
     ; Now for MODE 0
     :ldh a, [c]
-    and d
+    and e
     jr nz, :-
 
     ; Spit out chunked part
     ei
-    ld [hl], HDMA5F_MODE_GP | ((COPYCHUNK_SIZE >> 4) - 1)
+    ld [hl], d
     dec b
     jr nz, .copyLoop
 
@@ -341,10 +360,10 @@ realUpdateFramebuffer::
     di
     ; ...Just in case, make sure we don't start on mode 0
     :ldh a, [rSTAT]
-    and STATF_LCD
+    and e
     jr z, :-
     ei
-    ld [hl], ((252 - (GDMA_LEN + SHORT_GDMA_LEN + (COPY_SIZE >> 4))) - 1) | HDMA5F_MODE_HBL
+    ld [hl], (HDMA_LEN - 1) | HDMA5F_MODE_HBL
 
     ; Now time to clean that buffer
     ld hl, BUFFER_SRC
