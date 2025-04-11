@@ -77,4 +77,5 @@ Official Nintendo Hardware:
 - AGB/AGS - Untested
 
 Hardware Clones:
+- "Extension Converter for GB" (GB Boy Colour) - Pretty much flawless
 - FunnyPlaying FP-GBC FW1.14 - Same as CGB, but has crashed on me at least once.

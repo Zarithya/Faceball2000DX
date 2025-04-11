@@ -12,6 +12,7 @@ ASMFLAGS        :=  -p0
 FIXFLAGS        :=  -O -f gh
 FIX16			:=	0
 DX				:=	0
+ROM_EXT			:=  gb
 
 ifeq ($(FIX16),0)
 ifeq ($(DX),0)
@@ -33,6 +34,7 @@ PROJECT_NAME    =  	fb2k_dx
 SRC_ASM			+= 	$(SRC_DIR)/dx.asm
 ifeq ($(DX),2)
 ASMFLAGS 		+= 	-D _USE_GDMA
+ROM_EXT			:= gbc
 endif
 endif
 
@@ -46,8 +48,8 @@ LINKERFLAGS     :=  -m $(OUTPUT).map -n $(OUTPUT).sym -d
 all: build
 
 build: $(OBJ_FILES)
-	$(LINKER) -O fb2k.gb -o $(OUTPUT).gb $(LINKERFLAGS) $(OBJ_FILES)
-	$(FIX) $(FIXFLAGS) $(OUTPUT).gb
+	$(LINKER) -O fb2k.gb -o $(OUTPUT).$(ROM_EXT) $(LINKERFLAGS) $(OBJ_FILES)
+	$(FIX) $(FIXFLAGS) $(OUTPUT).$(ROM_EXT)
  
 $(BUILD_DIR)/obj/%.obj : src/%.asm | $(OBJ_DIRS)
 	$(ASM) -o $@ $(ASMFLAGS) $<
